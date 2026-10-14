@@ -1,119 +1,174 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
 
-enum UserRole { ADMIN DISPATCHER WAREHOUSE DRIVER FINANCE CUSTOMER }
-enum ShipmentType { INTERNATIONAL INTERSTATE LOCAL }
-enum ShippingMode { AIR SEA ROAD }
-enum ShipmentStatus { BOOKED PICKED_UP AT_WAREHOUSE DOCUMENTATION CUSTOMS IN_TRANSIT ARRIVED_HUB OUT_FOR_DELIVERY DELIVERED CANCELLED }
-enum PaymentStatus { UNPAID PARTIAL PAID OVERDUE }
-enum VehicleStatus { AVAILABLE ON_ROUTE MAINTENANCE INACTIVE }
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  DISPATCHER
+  WAREHOUSE
+  DRIVER
+  FINANCE
+  CUSTOMER
+}
+
+enum ShipmentType {
+  INTERNATIONAL
+  INTERSTATE
+  LOCAL
+}
+
+enum ShippingMode {
+  AIR
+  SEA
+  ROAD
+}
+
+enum ShipmentStatus {
+  BOOKED
+  PICKED_UP
+  AT_WAREHOUSE
+  DOCUMENTATION
+  CUSTOMS
+  IN_TRANSIT
+  ARRIVED_HUB
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  OVERDUE
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  ON_ROUTE
+  MAINTENANCE
+  INACTIVE
+}
 
 model User {
-  id String @id @default(cuid())
-  name String
-  email String @unique
-  passwordHash String?
-  role UserRole @default(CUSTOMER)
-  createdAt DateTime @default(now())
-  customer Customer?
-  driver Driver?
+  id             String          @id @default(cuid())
+  name           String
+  email          String          @unique
+  passwordHash   String?
+  role           UserRole        @default(CUSTOMER)
+  createdAt      DateTime        @default(now())
+  customer       Customer?
+  driver         Driver?
   trackingEvents TrackingEvent[] @relation("EventUpdatedBy")
 }
+
 model Customer {
-  id String @id @default(cuid())
-  name String
-  email String?
-  phone String?
-  address String?
-  customerType String @default("INDIVIDUAL")
-  createdAt DateTime @default(now())
-  user User? @relation(fields:[userId], references:[id])
-  userId String? @unique
-  orders Order[]
-  invoices Invoice[]
+  id           String    @id @default(cuid())
+  name         String
+  email        String?
+  phone        String?
+  address      String?
+  customerType String    @default("INDIVIDUAL")
+  createdAt    DateTime  @default(now())
+  user         User?     @relation(fields: [userId], references: [id])
+  userId       String?   @unique
+  orders       Order[]
+  invoices     Invoice[]
 }
+
 model Order {
-  id String @id @default(cuid())
-  orderNumber String @unique
-  customerId String
-  status String @default("OPEN")
-  paymentStatus PaymentStatus @default(UNPAID)
-  createdAt DateTime @default(now())
-  customer Customer @relation(fields:[customerId], references:[id])
-  shipment Shipment?
-  invoice Invoice?
+  id            String        @id @default(cuid())
+  orderNumber   String        @unique
+  customerId    String
+  status        String        @default("OPEN")
+  paymentStatus PaymentStatus  @default(UNPAID)
+  createdAt     DateTime      @default(now())
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  shipment      Shipment?
+  invoice       Invoice?
 }
+
 model Shipment {
-  id String @id @default(cuid())
-  trackingNumber String @unique
-  orderId String @unique
-  shipmentType ShipmentType @default(INTERSTATE)
-  shippingMode ShippingMode @default(ROAD)
-  senderName String
-  receiverName String
-  origin String
-  destination String
-  originCountry String @default("Nigeria")
-  destinationCountry String @default("Nigeria")
-  originState String?
-  destinationState String?
-  originCity String?
-  destinationCity String?
-  cargoDescription String?
-  weightKg Float?
-  pieces Int @default(1)
-  serviceType String
-  cost Float
-  status ShipmentStatus @default(BOOKED)
-  currentLocation String?
-  estimatedDelivery DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  order Order @relation(fields:[orderId], references:[id])
-  trackingEvents TrackingEvent[]
+  id                  String          @id @default(cuid())
+  trackingNumber      String          @unique
+  orderId             String          @unique
+  shipmentType        ShipmentType    @default(INTERSTATE)
+  shippingMode        ShippingMode    @default(ROAD)
+  senderName          String
+  receiverName        String
+  origin              String
+  destination         String
+  originCountry       String          @default("Nigeria")
+  destinationCountry  String          @default("Nigeria")
+  originState         String?
+  destinationState    String?
+  originCity          String?
+  destinationCity     String?
+  cargoDescription    String?
+  weightKg            Float?
+  pieces              Int             @default(1)
+  serviceType         String
+  cost                Float
+  status              ShipmentStatus  @default(BOOKED)
+  currentLocation     String?
+  estimatedDelivery   DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  order               Order           @relation(fields: [orderId], references: [id])
+  trackingEvents      TrackingEvent[]
 }
+
 model TrackingEvent {
-  id String @id @default(cuid())
-  shipmentId String
-  status ShipmentStatus
-  location String
-  note String?
-  timestamp DateTime @default(now())
+  id          String         @id @default(cuid())
+  shipmentId  String
+  status      ShipmentStatus
+  location    String
+  note        String?
+  timestamp   DateTime       @default(now())
   updatedById String?
-  shipment Shipment @relation(fields:[shipmentId], references:[id], onDelete:Cascade)
-  updatedBy User? @relation("EventUpdatedBy", fields:[updatedById], references:[id])
+  shipment    Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  updatedBy   User?          @relation("EventUpdatedBy", fields: [updatedById], references: [id])
+
   @@index([shipmentId, timestamp])
 }
+
 model Vehicle {
-  id String @id @default(cuid())
-  plateNumber String @unique
-  type String
-  status VehicleStatus @default(AVAILABLE)
+  id           String        @id @default(cuid())
+  plateNumber  String        @unique
+  type         String
+  status       VehicleStatus @default(AVAILABLE)
   currentRoute String?
-  mileageKm Int @default(0)
-  driver Driver?
+  mileageKm    Int           @default(0)
+  driver       Driver?
 }
+
 model Driver {
-  id String @id @default(cuid())
-  name String
-  phone String
-  licenseNo String @unique
-  status String @default("AVAILABLE")
-  userId String? @unique
-  vehicleId String? @unique
-  user User? @relation(fields:[userId], references:[id])
-  vehicle Vehicle? @relation(fields:[vehicleId], references:[id])
+  id         String   @id @default(cuid())
+  name       String
+  phone      String
+  licenseNo  String   @unique
+  status     String   @default("AVAILABLE")
+  userId     String?  @unique
+  vehicleId  String?  @unique
+  user       User?    @relation(fields: [userId], references: [id])
+  vehicle    Vehicle? @relation(fields: [vehicleId], references: [id])
 }
+
 model Invoice {
-  id String @id @default(cuid())
-  invoiceNo String @unique
+  id         String        @id @default(cuid())
+  invoiceNo  String        @unique
   customerId String
-  orderId String @unique
-  amount Float
-  tax Float @default(0)
-  dueDate DateTime
-  status PaymentStatus @default(UNPAID)
-  createdAt DateTime @default(now())
-  customer Customer @relation(fields:[customerId], references:[id])
-  order Order @relation(fields:[orderId], references:[id])
+  orderId    String        @unique
+  amount     Float
+  tax        Float         @default(0)
+  dueDate    DateTime
+  status     PaymentStatus @default(UNPAID)
+  createdAt  DateTime      @default(now())
+  customer   Customer      @relation(fields: [customerId], references: [id])
+  order      Order         @relation(fields: [orderId], references: [id])
 }
