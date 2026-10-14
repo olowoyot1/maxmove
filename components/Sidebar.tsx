@@ -8,7 +8,7 @@ const groups=[
  {label:'Fleet & Drivers',items:[['Fleet','/dashboard/fleet',Truck],['Drivers','/dashboard/drivers',UserRound]]},
  {label:'Warehouse',items:[['Warehouse','/dashboard/warehouse',Warehouse]]},
  {label:'Accounts & Finance',items:[['Invoices & Payments','/dashboard/finance',WalletCards]]},
- {label:'Customers',items:[['Customers','/dashboard/customers',Users]]},
+ {label:'Customers',items:[['Customers','/dashboard/customers',Users],['Form Builder','/dashboard/forms',Sparkles]]},
  {label:'Reports & Analytics',items:[['Analytics','/dashboard/analytics',BarChart3]]},
  {label:'AI & Tools',items:[['MaxMove AI','/ai',Sparkles]]},
  {label:'Administration',items:[['Settings','/dashboard/settings',Settings]]}

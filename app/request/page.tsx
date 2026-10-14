@@ -1,40 +1,18 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+type Field = { id: string; label: string; type: string; required: boolean; options?: string[] }
+type FormRecord = { name: string; description: string | null; slug: string; fields: string }
 
 export default function RequestPage() {
-  return (
-    <main className="request-page">
-      <div className="request-shell">
-        <Link href="/" className="back-link">
-          <ArrowLeft size={15} /> Back to MaxMove
-        </Link>
-        <div className="request-intro">
-          <div className="track-brand">
-            <img src="/maxmove-logo.jpg" alt="MaxMove Logistics" />
-            <div>
-              <b>maxmove</b><span> LOGISTICS</span>
-            </div>
-          </div>
-          <span className="badge green">SHIPMENT INTAKE</span>
-          <h1>Tell us what needs moving.</h1>
-          <p>Complete the shipment request below. Our operations team will review it and contact you with a quote.</p>
-        </div>
-        <div className="w-full overflow-hidden rounded-lg shadow-md" style={{ height: '800px' }}>
-          <iframe
-            title="MaxMove shipment request form"
-            src="https://docs.google.com/forms/d/1eiPcwpLSAiMnX8YcWhSqq3LUlSIiUuFtVrvA-bq_e64/viewform?embedded=true"
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            marginHeight={0}
-            marginWidth={0}
-          >
-            Loading…
-          </iframe>
-        </div>
-      </div>
-    </main>
-  );
+  const [form, setForm] = useState<FormRecord | null>(null)
+  const [values, setValues] = useState<Record<string, string>>({})
+  const [state, setState] = useState<'loading' | 'ready' | 'success' | 'error'>('loading')
+  useEffect(() => { fetch('/api/forms').then((response) => response.json()).then((forms: FormRecord[]) => { const published = forms.find((item) => (item as FormRecord & { status?: string }).status === 'PUBLISHED'); if (published) { setForm(published); setState('ready') } else setState('error') }).catch(() => setState('error')) }, [])
+  async function submit(event: React.FormEvent) { event.preventDefault(); if (!form) return; setState('loading'); const response = await fetch('/api/forms/submissions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug: form.slug, data: values }) }); setState(response.ok ? 'success' : 'error') }
+  const fields = form ? JSON.parse(form.fields) as Field[] : []
+  return <main className="request-page"><div className="request-shell"><Link href="/" className="back-link"><ArrowLeft size={15} /> Back to MaxMove</Link><div className="request-intro"><div className="track-brand"><img src="/maxmove-logo.jpg" alt="MaxMove Logistics" /><div><b>maxmove</b><span> LOGISTICS</span></div></div><span className="badge green">SHIPMENT REQUEST</span><h1>{form?.name || 'Shipment request'}</h1><p>{form?.description || 'Complete the form and our operations team will get back to you.'}</p></div>{state === 'success' ? <div className="card empty-state"><h3>Request received</h3><p className="muted">Thank you. Our operations team will review your shipment details and contact you shortly.</p><Link href="/" className="button primary">Return to MaxMove</Link></div> : state === 'error' ? <div className="card empty-state"><h3>No published form is available</h3><p className="muted">Please check back soon or contact MaxMove directly.</p></div> : <form className="card public-form" onSubmit={submit}><div className="form-fields">{fields.map((field) => <label className="field-label" key={field.id}>{field.label}{field.required && <span aria-hidden="true"> *</span>}{field.type === 'textarea' ? <textarea className="text-input" required={field.required} rows={4} value={values[field.id] || ''} onChange={(event) => setValues({ ...values, [field.id]: event.target.value })} /> : field.type === 'select' ? <select className="text-input" required={field.required} value={values[field.id] || ''} onChange={(event) => setValues({ ...values, [field.id]: event.target.value })}><option value="">Select an option</option>{(field.options || []).map((option) => <option key={option}>{option}</option>)}</select> : <input className="text-input" type={field.type} required={field.required} value={values[field.id] || ''} onChange={(event) => setValues({ ...values, [field.id]: event.target.value })} />}</label>)}</div><button className="button primary" disabled={state === 'loading'} type="submit">{state === 'loading' ? 'Sending…' : 'Submit request'}</button></form>}</div></main>
 }

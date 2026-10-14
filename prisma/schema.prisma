@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  // Keep the generated client aligned with the form builder models.
 }
 
 datasource db {
@@ -53,6 +54,30 @@ enum VehicleStatus {
   ON_ROUTE
   MAINTENANCE
   INACTIVE
+}
+
+model Form {
+  id           String            @id @default(cuid())
+  name         String
+  slug         String            @unique
+  description  String?
+  fields       String            @db.Text
+  status       String            @default("DRAFT")
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  submissions  FormSubmission[]
+
+  @@index([status])
+}
+
+model FormSubmission {
+  id          String   @id @default(cuid())
+  formId      String
+  data        String   @db.Text
+  createdAt   DateTime @default(now())
+  form        Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId, createdAt])
 }
 
 model QuoteRequest {
