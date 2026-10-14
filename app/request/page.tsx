@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, CheckCircle2, Package, ShieldCheck } from 'lucide-react';
 
@@ -8,6 +8,27 @@ const inputClass = 'request-input';
 
 export default function RequestPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function submitRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError('');
+    setSaving(true);
+    const form = new FormData(event.currentTarget);
+    const response = await fetch('/api/requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.fromEntries(form.entries())),
+    });
+    setSaving(false);
+    if (!response.ok) {
+      const result = await response.json().catch(() => null);
+      setError(result?.error ?? 'Unable to submit your request. Please try again.');
+      return;
+    }
+    setSubmitted(true);
+  }
 
   if (submitted) {
     return (
@@ -36,20 +57,21 @@ export default function RequestPage() {
             <p>One simple request for interstate delivery, international shipping, or a recurring logistics route.</p>
             <div className="request-points"><div><Package size={17} /><span><b>Built around your cargo</b>Origin, destination, service and package details in one place.</span></div><div><ShieldCheck size={17} /><span><b>Reviewed by operations</b>A coordinator checks every request before pricing.</span></div></div>
           </aside>
-          <form className="request-form" onSubmit={(event) => { event.preventDefault(); setSubmitted(true); }}>
+          <form className="request-form" onSubmit={submitRequest}>
             <div className="form-heading"><div><span className="eyebrow">NEW REQUEST</span><h2>Shipment details</h2></div><span className="form-step">1 / 1</span></div>
             <div className="request-grid">
-              <label>Full name<input className={inputClass} required placeholder="e.g. Amaka Okafor" /></label>
-              <label>Phone number<input className={inputClass} required placeholder="+234 800 000 0000" /></label>
-              <label>Email address<input className={inputClass} type="email" required placeholder="you@company.com" /></label>
-              <label>Service type<select className={inputClass} defaultValue="interstate"><option value="interstate">Interstate logistics</option><option value="international">International shipping</option><option value="local">Local delivery</option></select></label>
-              <label>Pickup location<input className={inputClass} required placeholder="City, state or country" /></label>
-              <label>Delivery location<input className={inputClass} required placeholder="City, state or country" /></label>
-              <label>Preferred movement<select className={inputClass} defaultValue="road"><option value="road">Road freight</option><option value="air">Air freight</option><option value="sea">Sea freight</option></select></label>
-              <label>Ready date<input className={inputClass} type="date" required /></label>
-              <label className="full-field">What are you shipping?<textarea className={inputClass} required rows={4} placeholder="Describe the items, quantity, weight or any handling needs" /></label>
+              <label>Full name<input name="fullName" className={inputClass} required placeholder="e.g. Amaka Okafor" /></label>
+              <label>Phone number<input name="phone" className={inputClass} required placeholder="+234 800 000 0000" /></label>
+              <label>Email address<input name="email" className={inputClass} type="email" required placeholder="you@company.com" /></label>
+              <label>Service type<select name="serviceType" className={inputClass} defaultValue="interstate"><option value="interstate">Interstate logistics</option><option value="international">International shipping</option><option value="local">Local delivery</option></select></label>
+              <label>Pickup location<input name="pickupLocation" className={inputClass} required placeholder="City, state or country" /></label>
+              <label>Delivery location<input name="deliveryLocation" className={inputClass} required placeholder="City, state or country" /></label>
+              <label>Preferred movement<select name="movement" className={inputClass} defaultValue="road"><option value="road">Road freight</option><option value="air">Air freight</option><option value="sea">Sea freight</option></select></label>
+              <label>Ready date<input name="readyDate" className={inputClass} type="date" required /></label>
+              <label className="full-field">What are you shipping?<textarea name="cargoDescription" className={inputClass} required rows={4} placeholder="Describe the items, quantity, weight or any handling needs" /></label>
             </div>
-            <button className="btn green form-submit" type="submit">Request a quote <ArrowRight size={16} /></button>
+            {error && <p role="alert" className="form-error">{error}</p>}
+            <button className="btn green form-submit" type="submit" disabled={saving}>{saving ? 'Submitting request…' : 'Request a quote'} {!saving && <ArrowRight size={16} />}</button>
             <p className="form-note">By submitting, you agree that MaxMove may contact you about this request.</p>
           </form>
         </div>
