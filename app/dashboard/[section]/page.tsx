@@ -19,11 +19,20 @@ export default async function DashboardSection({ params }: { params: Promise<{ s
   const content = sections[section]
   if (!content) notFound()
 
-  const requests = section === 'customers' ? await db.quoteRequest.findMany({ orderBy: { createdAt: 'desc' }, take: 50 }) : []
+  let requests: Awaited<ReturnType<typeof db.quoteRequest.findMany>> = []
+  let dataError = false
+  if (section === 'customers') {
+    try {
+      requests = await db.quoteRequest.findMany({ orderBy: { createdAt: 'desc' }, take: 50 })
+    } catch (error) {
+      console.error('[v0] customer requests could not be loaded', error)
+      dataError = true
+    }
+  }
 
   return <DashboardShell title={content.title}>
     <div className="page-head"><div><span className="badge green">MAXMOVE WORKSPACE</span><h2>{content.heading}</h2><p className="muted">{content.description}</p></div></div>
-    {section === 'customers' ? <div className="card" style={{ overflowX: 'auto' }}><div className="table-heading"><div><h3>Customer requests</h3><p className="muted">Requests submitted through the public website.</p></div><span className="badge green">{requests.length} TOTAL</span></div>{requests.length ? <table className="data-table"><thead><tr><th>Customer</th><th>Route</th><th>Service</th><th>Ready date</th><th>Status</th></tr></thead><tbody>{requests.map((request) => <tr key={request.id}><td><strong>{request.fullName}</strong><small>{request.email}<br />{request.phone}</small></td><td>{request.pickupLocation} → {request.deliveryLocation}</td><td>{request.serviceType} / {request.movement}</td><td>{request.readyDate.toLocaleDateString()}</td><td><span className="badge green">{request.status}</span></td></tr>)}</tbody></table> : <div className="empty-state"><h3>No customer requests yet</h3><p className="muted">New public quote requests will appear here automatically.</p></div>}</div> : <div className="card empty-state"><h3>Ready for operations</h3><p className="muted">This module is connected to the MaxMove workspace and ready for live records.</p></div>}
+    {section === 'customers' ? <div className="card" style={{ overflowX: 'auto' }}><div className="table-heading"><div><h3>Customer requests</h3><p className="muted">Requests submitted through the public website.</p></div><span className="badge green">{requests.length} TOTAL</span></div>{dataError ? <div className="empty-state"><h3>Customer records are temporarily unavailable</h3><p className="muted">The database connection needs to be configured before submitted forms can appear here.</p></div> : requests.length ? <table className="data-table"><thead><tr><th>Customer</th><th>Route</th><th>Service</th><th>Ready date</th><th>Status</th></tr></thead><tbody>{requests.map((request) => <tr key={request.id}><td><strong>{request.fullName}</strong><small>{request.email}<br />{request.phone}</small></td><td>{request.pickupLocation} → {request.deliveryLocation}</td><td>{request.serviceType} / {request.movement}</td><td>{request.readyDate.toLocaleDateString()}</td><td><span className="badge green">{request.status}</span></td></tr>)}</tbody></table> : <div className="empty-state"><h3>No customer requests yet</h3><p className="muted">New public quote requests will appear here automatically.</p></div>}</div> : <div className="card empty-state"><h3>Ready for operations</h3><p className="muted">This module is connected to the MaxMove workspace and ready for live records.</p></div>}
   </DashboardShell>
 }
 
