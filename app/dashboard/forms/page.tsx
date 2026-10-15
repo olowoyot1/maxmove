@@ -30,7 +30,21 @@ export default function FormsPage() {
 
   async function load() {
     const [formResponse, submissionResponse] = await Promise.all([fetch('/api/forms'), fetch('/api/forms/submissions')])
-    if (formResponse.ok) setForms(await formResponse.json())
+    if (formResponse.ok) {
+      const savedForms: FormRecord[] = await formResponse.json()
+      setForms(savedForms)
+      const latest = savedForms[0]
+      if (latest) {
+        setName(latest.name)
+        setDescription(latest.description || '')
+        try {
+          const savedFields = JSON.parse(latest.fields) as Field[]
+          if (Array.isArray(savedFields) && savedFields.length) setFields(savedFields)
+        } catch {
+          setMessage('Saved form loaded with default questions because its field data could not be read.')
+        }
+      }
+    }
     if (submissionResponse.ok) setSubmissions(await submissionResponse.json())
   }
   useEffect(() => { load() }, [])
