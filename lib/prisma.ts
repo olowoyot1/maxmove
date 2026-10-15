@@ -6,6 +6,8 @@ import { PrismaClient } from '@prisma/client';
 const postgresUrl = [
   process.env.DATABASE_URL,
   process.env.PRISMA_DATABASE_URL,
+  process.env.NEON_POSTGRES_PRISMA_URL,
+  process.env.NEON_POSTGRES_URL,
   process.env.POSTGRES_URL,
 ].map((value) => value?.trim().replace(/^['"]|['"]$/g, ''))
   .find((value) => value?.startsWith('postgresql://') || value?.startsWith('postgres://'))

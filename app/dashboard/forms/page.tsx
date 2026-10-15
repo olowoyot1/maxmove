@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import DashboardShell from '@/components/DashboardShell'
 
-type FieldType = 'text' | 'email' | 'tel' | 'date' | 'textarea' | 'select'
+type FieldType = 'text' | 'email' | 'tel' | 'date' | 'textarea' | 'select' | 'checkbox'
 type Field = { id: string; label: string; type: FieldType; required: boolean; options?: string[] }
 type FormRecord = { id: string; name: string; slug: string; description: string | null; fields: string; status: string; _count: { submissions: number } }
 type Submission = { id: string; data: string; createdAt: string; form: { name: string } }
@@ -17,7 +17,7 @@ const starterFields: Field[] = [
   { id: 'cargo', label: 'Cargo description', type: 'textarea', required: true },
 ]
 
-const typeLabels: Record<FieldType, string> = { text: 'Short answer', email: 'Email', tel: 'Phone', date: 'Date', textarea: 'Long answer', select: 'Dropdown' }
+const typeLabels: Record<FieldType, string> = { text: 'Short answer', email: 'Email', tel: 'Phone', date: 'Date', textarea: 'Long answer', select: 'Dropdown', checkbox: 'Tick options' }
 
 export default function FormsPage() {
   const [forms, setForms] = useState<FormRecord[]>([])
@@ -45,8 +45,13 @@ export default function FormsPage() {
   async function save(status: 'DRAFT' | 'PUBLISHED') {
     setMessage('Saving form…')
     const response = await fetch('/api/forms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, description, fields, status }) })
-    setMessage(response.ok ? status === 'PUBLISHED' ? 'Published. Customers can now use /request.' : 'Draft saved.' : 'Could not save form.')
-    await load()
+    if (response.ok) {
+      setMessage(status === 'PUBLISHED' ? 'Published. Customers can now use /request.' : 'Draft saved.')
+      await load()
+    } else {
+      const result = await response.json().catch(() => null)
+      setMessage(result?.error || 'Could not save form. Check the database connection.')
+    }
   }
   async function publish(id: string, status: string) { await fetch('/api/forms', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) }); await load() }
 
@@ -67,8 +72,8 @@ export default function FormsPage() {
           <div className="builder-card basics-card"><label className="builder-label">Form name<input className="builder-input" value={name} onChange={(event) => setName(event.target.value)} /></label><label className="builder-label">Introductory message<textarea className="builder-input" value={description} onChange={(event) => setDescription(event.target.value)} rows={3} /></label></div>
 
           <div className="builder-section-heading fields-heading"><div><span className="section-kicker">02 / QUESTIONS</span><h2>Customer questions</h2><p>Arrange the information needed to quote and schedule a shipment.</p></div><span className="field-count">{fields.length} fields</span></div>
-          <div className="field-stack">{fields.map((field, index) => <article className="builder-card question-card" key={field.id}><div className="question-number">{String(index + 1).padStart(2, '0')}</div><div className="question-content"><div className="question-top"><span className="question-type">{typeLabels[field.type]}</span><div className="question-actions"><button onClick={() => moveField(field.id, -1)} disabled={index === 0} aria-label="Move field up">↑</button><button onClick={() => moveField(field.id, 1)} disabled={index === fields.length - 1} aria-label="Move field down">↓</button><button className="delete-action" onClick={() => setFields(fields.filter((item) => item.id !== field.id))}>Remove</button></div></div><input className="builder-input question-label" value={field.label} onChange={(event) => updateField(field.id, { label: event.target.value })} aria-label="Field label" /><div className="question-bottom"><select className="builder-select" value={field.type} onChange={(event) => updateField(field.id, { type: event.target.value as FieldType })}>{Object.entries(typeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><label className="required-toggle"><input type="checkbox" checked={field.required} onChange={(event) => updateField(field.id, { required: event.target.checked })} /> Required question</label></div></div></article>)}</div>
-          <div className="add-question"><span>Add a question</span><div><button onClick={() => addField('text')}>+ Short answer</button><button onClick={() => addField('textarea')}>+ Long answer</button><button onClick={() => addField('select')}>+ Dropdown</button></div></div>
+          <div className="field-stack">{fields.map((field, index) => <article className="builder-card question-card" key={field.id}><div className="question-number">{String(index + 1).padStart(2, '0')}</div><div className="question-content"><div className="question-top"><span className="question-type">{typeLabels[field.type]}</span><div className="question-actions"><button onClick={() => moveField(field.id, -1)} disabled={index === 0} aria-label="Move field up">↑</button><button onClick={() => moveField(field.id, 1)} disabled={index === fields.length - 1} aria-label="Move field down">↓</button><button className="delete-action" onClick={() => setFields(fields.filter((item) => item.id !== field.id))}>Remove</button></div></div><input className="builder-input question-label" value={field.label} onChange={(event) => updateField(field.id, { label: event.target.value })} aria-label="Field label" /><div className="question-bottom"><select className="builder-select" value={field.type} onChange={(event) => updateField(field.id, { type: event.target.value as FieldType, ...(event.target.value === 'checkbox' && !field.options ? { options: ['Option 1', 'Option 2'] } : {}) })}>{Object.entries(typeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>{field.type === 'select' || field.type === 'checkbox' ? <div className="option-editor">{(field.options || []).map((option, optionIndex) => <div className="option-row" key={`${field.id}-${optionIndex}`}><input className="builder-input" value={option} aria-label={`Option ${optionIndex + 1}`} onChange={(event) => updateField(field.id, { options: (field.options || []).map((item, index) => index === optionIndex ? event.target.value : item) })} /><button type="button" onClick={() => updateField(field.id, { options: (field.options || []).filter((_, index) => index !== optionIndex) })}>Remove</button></div>)}<button type="button" className="add-option" onClick={() => updateField(field.id, { options: [...(field.options || []), `Option ${(field.options || []).length + 1}`] })}>+ Add option</button></div> : null}<label className="required-toggle"><input type="checkbox" checked={field.required} onChange={(event) => updateField(field.id, { required: event.target.checked })} /> Required question</label></div></div></article>)}</div>
+          <div className="add-question"><span>Add a question</span><div><button onClick={() => addField('text')}>+ Short answer</button><button onClick={() => addField('textarea')}>+ Long answer</button><button onClick={() => addField('select')}>+ Dropdown</button><button onClick={() => addField('checkbox')}>+ Tick options</button></div></div>
           <div className="builder-footer"><span className="save-message">{message}</span><div><button className="button secondary" onClick={() => save('DRAFT')}>Save draft</button><button className="button primary" onClick={() => save('PUBLISHED')}>Save & publish</button></div></div>
         </section>
 
