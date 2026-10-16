@@ -115,3 +115,94 @@ button, a, input, select, textarea { touch-action: manipulation; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+
+/* Public dynamic request form: polished, responsive field layout */
+.request-page {
+  padding: clamp(22px, 4vw, 54px) 18px;
+  background: radial-gradient(ellipse at top right, rgba(35,174,141,.16), transparent 38%), var(--navy);
+}
+.request-shell { width: min(100%, 1120px); }
+.request-shell > .back-link {
+  color: #d8e7f7; margin-bottom: 18px; text-decoration: none;
+  transition: color .18s ease;
+}
+.request-shell > .back-link:hover { color: var(--green); }
+.request-intro { padding: 12px 8px 26px; }
+.request-intro .track-brand { margin-bottom: 28px; }
+.request-intro .badge { letter-spacing: .04em; }
+.request-intro h1 {
+  max-width: 100%; margin: 16px 0 12px; font-size: clamp(32px, 5vw, 54px);
+  line-height: 1.08; letter-spacing: -.035em; overflow-wrap: anywhere;
+}
+.request-intro p { max-width: 680px; margin: 0; font-size: 15px; line-height: 1.7; }
+.public-form {
+  width: 100%; background: #fff; color: var(--ink);
+  border: 1px solid rgba(255,255,255,.55); border-radius: 18px;
+  padding: clamp(20px, 3.5vw, 38px);
+  box-shadow: 0 22px 65px rgba(0,0,0,.16);
+}
+.form-fields {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 20px; align-items: start; margin-bottom: 26px;
+}
+.field-label {
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+  min-width: 0; color: #24364b; font-size: 13px; font-weight: 650;
+  line-height: 1.45; overflow-wrap: anywhere;
+}
+.field-label > span { color: #c0393a; display: inline; }
+.text-input {
+  display: block; width: 100%; min-width: 0; max-width: 100%;
+  border: 1px solid #d5deea; border-radius: 9px; background: #fff;
+  color: #17283d; padding: 12px 13px; font-size: 14px; line-height: 1.45;
+  outline: none; box-shadow: 0 1px 2px rgba(16,32,51,.03);
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+textarea.text-input { min-height: 112px; resize: vertical; }
+.text-input:focus {
+  border-color: var(--teal); box-shadow: 0 0 0 3px rgba(35,174,141,.13);
+}
+.text-input::placeholder { color: #8795a7; }
+input.text-input[type="file"] {
+  padding: 10px; border-style: dashed; background: #f8fbfd;
+  cursor: pointer; font-size: 12px;
+}
+input.text-input[type="file"]::file-selector-button {
+  border: 0; border-radius: 6px; background: #e6f7f1; color: #116d59;
+  padding: 8px 10px; margin-right: 12px; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.field-label small { color: #718096; font-size: 11px; line-height: 1.55; font-weight: 450; }
+.checkbox-options { display: grid; gap: 10px; }
+.checkbox-option {
+  display: flex; align-items: flex-start; gap: 9px; color: #425269;
+  font-size: 13px; font-weight: 450; line-height: 1.5;
+}
+.checkbox-option input { width: 16px; height: 16px; flex: 0 0 16px; margin: 2px 0 0; accent-color: var(--teal); }
+.public-form > .button.primary {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 46px; padding: 12px 22px; border: 0; border-radius: 9px;
+  background: var(--green); color: var(--navy); font-size: 14px; font-weight: 800;
+  box-shadow: 0 6px 16px rgba(6,241,50,.14); cursor: pointer;
+  transition: transform .16s ease, filter .16s ease;
+}
+.public-form > .button.primary:hover:not(:disabled) { filter: brightness(.96); transform: translateY(-1px); }
+.public-form > .button.primary:disabled { opacity: .65; cursor: wait; }
+.request-shell .empty-state { width: 100%; border-radius: 18px; padding: clamp(24px, 4vw, 40px); }
+.request-shell .empty-state h3 { margin: 0 0 8px; color: var(--navy); font-size: 23px; }
+.request-shell .empty-state p { line-height: 1.7; margin-bottom: 22px; }
+@media (min-width: 900px) {
+  .request-intro { padding-top: 18px; }
+}
+@media (max-width: 640px) {
+  .request-page { padding: 18px 12px 28px; }
+  .request-intro { padding: 8px 2px 22px; }
+  .request-intro .track-brand { margin-bottom: 22px; }
+  .request-intro h1 { font-size: clamp(29px, 8vw, 40px); letter-spacing: -.025em; }
+  .request-intro p { font-size: 13px; }
+  .public-form { padding: 19px 15px; border-radius: 14px; }
+  .form-fields { grid-template-columns: minmax(0, 1fr); gap: 18px; margin-bottom: 22px; }
+  .field-label { font-size: 12px; }
+  .text-input { font-size: 16px; padding: 12px; }
+  .public-form > .button.primary { width: 100%; }
+}
