@@ -16,9 +16,13 @@ export async function POST(request: Request) {
     const body = await request.json()
     const form = await db.form.findUnique({ where: { slug: String(body.slug || '') } })
     if (!form || form.status !== 'PUBLISHED') return NextResponse.json({ error: 'This form is not available' }, { status: 404 })
-    const fields = JSON.parse(form.fields) as Array<{ id: string; required?: boolean }>
+    const fields = JSON.parse(form.fields) as Array<{ id: string; required?: boolean; type?: string }>
     const data = body.data && typeof body.data === 'object' ? body.data : {}
-    if (fields.some((field) => field.required && !String(data[field.id] || '').trim())) return NextResponse.json({ error: 'Please complete all required fields' }, { status: 400 })
+    if (fields.some((field) => field.required && !String(data[field.id] || '').trim())) return NextResponse.json({ error: 'Please complete all required fields and upload required documents' }, { status: 400 })
+    for (const field of fields.filter((item) => item.type === 'file')) {
+      const path = String(data[field.id] || '')
+      if (path && (!path.startsWith('customer-ids/') || path.includes('..') || path.startsWith('/'))) return NextResponse.json({ error: 'Invalid uploaded document reference' }, { status: 400 })
+    }
     const submission = await db.formSubmission.create({ data: { formId: form.id, data: JSON.stringify(data) } })
     return NextResponse.json({ id: submission.id })
   } catch (error) {
