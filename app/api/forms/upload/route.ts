@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       data: { fileName: safeName, mimeType: file.type, size: file.size, content: bytes },
       select: { id: true },
     })
-    return NextResponse.json({ documentId: document.id })
+    return NextResponse.json({ path: document.id })
   } catch (error) {
     console.error('[forms/upload] Neon document upload failed', error)
     return NextResponse.json({ error: 'Document upload failed. Please try again.' }, { status: 500 })
