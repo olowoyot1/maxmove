@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     const extension = file.type === 'application/pdf' ? 'pdf' : file.type === 'image/jpeg' ? 'jpg' : 'png'
     const path = `customer-ids/${crypto.randomUUID()}.${extension}`
-    const uploadUrl = `${url.replace(/\\/$/, '')}/storage/v1/object/${encodeURIComponent(bucket)}/${path.split('/').map(encodeURIComponent).join('/')}`
+    const uploadUrl = `${url.replace(/\/$/, '')}/storage/v1/object/${encodeURIComponent(bucket)}/${path.split('/').map(encodeURIComponent).join('/')}`
     const response = await fetch(uploadUrl, {
       method: 'POST',
       headers: { Authorization: `Bearer ${serviceKey}`, apikey: serviceKey, 'Content-Type': file.type, 'x-upsert': 'false' },
