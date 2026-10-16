@@ -215,3 +215,15 @@ model Invoice {
   customer   Customer      @relation(fields: [customerId], references: [id])
   order      Order         @relation(fields: [orderId], references: [id])
 }
+
+
+model UploadedDocument {
+  id        String   @id @default(cuid())
+  fileName  String
+  mimeType  String
+  size      Int
+  content   Bytes
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
