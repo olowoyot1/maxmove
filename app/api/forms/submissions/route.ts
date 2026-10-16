@@ -20,8 +20,11 @@ export async function POST(request: Request) {
     const data = body.data && typeof body.data === 'object' ? body.data : {}
     if (fields.some((field) => field.required && !String(data[field.id] || '').trim())) return NextResponse.json({ error: 'Please complete all required fields and upload required documents' }, { status: 400 })
     for (const field of fields.filter((item) => item.type === 'file')) {
-      const path = String(data[field.id] || '')
-      if (path && (!path.startsWith('customer-ids/') || path.includes('..') || path.startsWith('/'))) return NextResponse.json({ error: 'Invalid uploaded document reference' }, { status: 400 })
+      const documentId = String(data[field.id] || '')
+      if (documentId) {
+        const document = await db.uploadedDocument.findUnique({ where: { id: documentId }, select: { id: true } })
+        if (!document) return NextResponse.json({ error: 'An uploaded document could not be found. Please upload it again.' }, { status: 400 })
+      }
     }
     const submission = await db.formSubmission.create({ data: { formId: form.id, data: JSON.stringify(data) } })
     return NextResponse.json({ id: submission.id })
