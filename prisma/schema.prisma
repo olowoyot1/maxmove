@@ -56,6 +56,13 @@ enum VehicleStatus {
   INACTIVE
 }
 
+model SiteContent {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String   @db.Text
+  updatedAt   DateTime @updatedAt
+}
+
 model Form {
   id           String            @id @default(cuid())
   name         String
